@@ -118,7 +118,7 @@ class GopherQualityFilter(BaseFilter):
         if (
             self.max_non_alpha_words_ratio
             # nb of words with at least 1 alpha char < 0.8
-            and sum([any((c.isalpha() for c in w)) for w in words]) / n_words < self.max_non_alpha_words_ratio
+            and sum(any((c.isalpha() for c in w)) for w in words) / n_words < self.max_non_alpha_words_ratio
         ):
             return False, "gopher_below_alpha_threshold"
 
