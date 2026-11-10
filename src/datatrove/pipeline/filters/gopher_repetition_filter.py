@@ -28,10 +28,6 @@ Table A1 from https://arxiv.org/pdf/2112.11446.pdf
 """
 
 
-def get_n_grams(words: list[str], n: int) -> list[str]:
-    return [" ".join(words[i : i + n]) for i in range(len(words) - n + 1)]
-
-
 def find_duplicates(x: list[str]) -> tuple[int, int]:
     unique_x = set()
     duplicate_chars = 0
@@ -46,12 +42,21 @@ def find_duplicates(x: list[str]) -> tuple[int, int]:
     return duplicate_elements, duplicate_chars
 
 
-def find_top_duplicate(x: list[str]) -> int:
+def find_top_duplicate_streaming(words: list[str], n: int) -> int:
+    """Streamingly find the most common n-gram and return its total character length.
+
+    Avoids creating an intermediate list of all n-grams, saving memory for large documents.
+    """
+    if n <= 0 or len(words) < n:
+        return 0
     counter = Counter()
-    for element in x:
-        counter[element] += 1
-    top_n_gram = counter.most_common(1)[0]
-    return len(top_n_gram[0]) * top_n_gram[1]
+    for i in range(len(words) - n + 1):
+        n_gram = " ".join(words[i : i + n])
+        counter[n_gram] += 1
+    if not counter:
+        return 0
+    top_n_gram, count = counter.most_common(1)[0]
+    return len(top_n_gram) * count
 
 
 def find_all_duplicate(words: list[str], n: int) -> int:
@@ -129,10 +134,9 @@ class GopherRepetitionFilter(BaseFilter):
         words = split_into_words(text, self.language)
 
         for n, n_frac in self.top_n_grams:
-            n_grams = get_n_grams(words, n)
-            if not n_grams:
+            top_char_length = find_top_duplicate_streaming(words, n)
+            if top_char_length == 0:
                 continue
-            top_char_length = find_top_duplicate(n_grams)
             if top_char_length / len(text) > n_frac:
                 return False, f"top_{n}_gram"
 
