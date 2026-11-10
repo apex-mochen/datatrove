@@ -1,5 +1,3 @@
-import numpy as np
-
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
@@ -72,17 +70,23 @@ class GopherQualityFilter(BaseFilter):
         words = split_into_words(text, self.language)
         n_words = len(words)
 
-        non_symbol_words = [w for w in words if any(ch not in PUNCTUATION_SET for ch in w)]
-        n_non_symbol_words_words = len(non_symbol_words)
+        # Stream over words to count non-symbol words and their total length,
+        # avoiding creating intermediate lists
+        n_non_symbol_words = 0
+        total_non_symbol_chars = 0
+        for w in words:
+            if any(ch not in PUNCTUATION_SET for ch in w):
+                n_non_symbol_words += 1
+                total_non_symbol_chars += len(w)
 
         # words < min_doc_words or words > max_doc_words
-        if self.min_doc_words and n_non_symbol_words_words < self.min_doc_words:
+        if self.min_doc_words and n_non_symbol_words < self.min_doc_words:
             return False, "gopher_short_doc"
-        if self.max_doc_words and n_non_symbol_words_words > self.max_doc_words:
+        if self.max_doc_words and n_non_symbol_words > self.max_doc_words:
             return False, "gopher_long_doc"
 
         # mean word length is outside the range of 3 to 10 characters
-        avg_n_words = np.mean([len(w) for w in non_symbol_words])
+        avg_n_words = total_non_symbol_chars / n_non_symbol_words if n_non_symbol_words > 0 else 0.0
         if self.min_avg_word_length and avg_n_words < self.min_avg_word_length:
             return False, "gopher_below_avg_threshold"
         if self.max_avg_word_length and avg_n_words > self.max_avg_word_length:
