@@ -61,11 +61,9 @@ class UnigramLogProbFilter(BaseFilter):
 
     def get_logprob(self, doc):
         words = split_into_words(doc.text, self.language)
-        freqs = [self.unigram_frequencies.get(word.lower(), 1e-9) for word in words]
-
-        if len(freqs) == 0:
+        if len(words) == 0:
             return 0
-        return sum([np.log(f) for f in freqs]) / len(freqs)
+        return sum(np.log(self.unigram_frequencies.get(word.lower(), 1e-9)) for word in words) / len(words)
 
     def filter(self, doc: Document) -> bool:
         """
