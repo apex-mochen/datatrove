@@ -121,7 +121,7 @@ class URLFilter(BaseFilter):
         if any(word in url_words for word in self.banned_words):
             return False, "hard_blacklisted"
 
-        nb_soft_words = sum([word in url_words for word in self.soft_banned_words])
+        nb_soft_words = sum(word in url_words for word in self.soft_banned_words)
         if nb_soft_words >= self.soft_word_threshold:
             return False, "soft_blacklisted"
 
