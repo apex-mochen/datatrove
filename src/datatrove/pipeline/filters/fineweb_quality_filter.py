@@ -43,13 +43,13 @@ class FineWebQualityFilter(BaseFilter):
         if ratio > self.short_line_threshold:
             return False, "short_line_ratio"
 
-        ratio = find_duplicates(lines)[1] / len(doc.text.replace("\n", ""))
+        new_line = doc.text.count("\n")
+        ratio = find_duplicates(lines)[1] / (len(doc.text) - new_line)
 
         if ratio > self.char_duplicates_ratio:
             return False, "char_dup_ratio"
 
         words = split_into_words(doc.text, self.language)
-        new_line = doc.text.count("\n")
         if new_line / len(words) > self.new_line_ratio:
             return False, "list_ratio"
 
